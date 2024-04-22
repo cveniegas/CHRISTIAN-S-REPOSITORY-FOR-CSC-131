@@ -20,7 +20,7 @@ router.get('/login', (req, res) => {
   });
 
 router.get('/forum', authController.isLoggedIn, (req, res) => {
-  res.render('forum',{user:req.user, forum:req.forum})
+  res.render('forum',{user:req.user})
 });
 
 router.get('/profile', authController.isLoggedIn, (req, res) => {

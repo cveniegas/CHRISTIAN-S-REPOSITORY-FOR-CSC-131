@@ -114,7 +114,6 @@ exports.register = (req,res) =>{
                 });
             };
         });
-
     });
 
 }
