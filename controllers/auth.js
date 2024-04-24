@@ -6,6 +6,10 @@ const bcrypt = require('bcryptjs');
 const { promisify } = require('util');
 const express = require("express");
 const { Console, error } = require("console");
+const cookieParser = require('cookie-parser');
+
+
+const router = express.Router();
 
 const db = mysql.createConnection({
     host: process.env.DATABASE_HOST,
@@ -13,6 +17,7 @@ const db = mysql.createConnection({
     password: process.env.DATABASE_PASSWORD,
     database: process.env.DATABASE
 });
+const authController = require('../controllers/auth');
 // Define a Handlebars helper function to capitalize the first letter of a string
 
 exports.postComment = (req,res) => {
@@ -20,28 +25,60 @@ exports.postComment = (req,res) => {
   
   const { title, content, user_id } = req.body;
 
-  db.query('INSERT INTO forum SET ?', { title, content, user_id }, (error, results) => {
-    try {
-      if (error) {
-        console.error(error);
-        return res.status(500).send('Error posting comment'); // Send error response to the client
-      } else {
-        return res.render('forum', { message: 'Thread Posted' });
-      }
-    } catch (error) {
-      console.error(error);
-      return res.status(500).send('Error posting comment'); // Send error response to the client
-    }
-  });
-  db.query('SELECT * FROM users WHERE name = ?', [name], (error,results)=>{
-    
-  })
+    db.query('INSERT INTO forum SET ?', { title, content, user_id }, (error, results) => {
+        if (error) {
+            console.error(error);
+            return res.status(500).send('Error posting comment'); // Send error response to the client
+        }
+        // Reload comments after posting a new comment
+        authController.loadComments(req, res, () => {
+          // Check if forumData is empty
+          if (!req.forumData || req.forumData.length === 0) {
+              // If forumData is empty, render the 'forum' template with only user data
+              return res.render('forum', { user: req.user, isLoggedIn: authController.isLoggedIn });
+          } else {
+              // If forumData is available, render the 'forum' template with both forumData and user data
+              return res.render('forum', { user: req.user, forumData: req.forumData, userData: req.userData, isLoggedIn: authController.isLoggedIn, message: 'Thread Posted' });
+          }
+      });
+    });
+}
 
+exports.loadComments = (req,res,next) =>{
+    console.log(req.body);
+
+    // Declare variables to store the data
+    let forumData, userData;
+
+    // Execute the SQL query to fetch forum data
+    db.query("SELECT users.*, forum.title, forum.content, forum.date FROM users JOIN forum ON users.id = forum.user_id", (error, forumResults) => {
+        if (error) {
+            console.error("Error executing forum query:", error);
+            return res.status(500).send("Error fetching forum data");
+        }
+
+        // Store the forum data in a local variable
+        forumData = forumResults;
+
+        // Execute the SQL query to fetch user data
+        db.query("SELECT * FROM users", (error, userResults) => {
+            if (error) {
+                console.error("Error executing user query:", error);
+                return res.status(500).send("Error fetching user data");
+            }
+
+            // Store the user data in a local variable
+            userData = userResults;
+
+            // Store the retrieved data in the request object
+            req.forumData = forumData;
+            req.userData = userData;
+            // Proceed to the next middleware or route handler
+            next();
+        });
+    });
 }
-exports.loadComments = (req,res) =>{
-  console.log(req.body);
-  db.query("SELECT users.*, forum.title, forum.content, forum.date FROM users JOIN forum ON users.id = forum.user_id;SELECT user_posts.*, users.name FROM user_posts INNER JOIN users ON user_posts.user_id = users.user_id")
-}
+
 exports.login = async (req, res) => {
     try {
       const { email, password } = req.body;

@@ -19,8 +19,15 @@ router.get('/login', (req, res) => {
     });
   });
 
-router.get('/forum', authController.isLoggedIn, (req, res) => {
-  res.render('forum',{user:req.user})
+router.get('/forum', authController.isLoggedIn, authController.loadComments, (req, res) => {
+      // Check if forumData is empty
+    if (!req.forumData || req.forumData.length === 0) {
+      // If forumData is empty, render the 'forum' template with only user data
+      res.render('forum',{ user: req.user });
+  } else {
+      // If forumData is available, render the 'forum' template with both forumData and user data
+      res.render('forum',{ user: req.user, forumData: req.forumData, userData: req.userData });
+  }
 });
 
 router.get('/profile', authController.isLoggedIn, (req, res) => {

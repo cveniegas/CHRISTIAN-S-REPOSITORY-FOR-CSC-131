@@ -9,6 +9,8 @@ router.post('/login', authController.login);
 
 router.post('/postComment', authController.postComment);
 
+router.post('/loadComments', authController.loadComments)
+
 router.get('/logout', authController.logout );
 
 module.exports = router;
