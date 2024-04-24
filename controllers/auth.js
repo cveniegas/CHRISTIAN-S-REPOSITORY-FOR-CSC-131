@@ -5,9 +5,6 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { promisify } = require('util');
 const express = require("express");
-const { Console, error } = require("console");
-const cookieParser = require('cookie-parser');
-
 
 const router = express.Router();
 
@@ -31,16 +28,7 @@ exports.postComment = (req,res) => {
             return res.status(500).send('Error posting comment'); // Send error response to the client
         }
         // Reload comments after posting a new comment
-        authController.loadComments(req, res, () => {
-          // Check if forumData is empty
-          if (!req.forumData || req.forumData.length === 0) {
-              // If forumData is empty, render the 'forum' template with only user data
-              return res.render('forum', { user: req.user, isLoggedIn: authController.isLoggedIn });
-          } else {
-              // If forumData is available, render the 'forum' template with both forumData and user data
-              return res.render('forum', { user: req.user, forumData: req.forumData, userData: req.userData, isLoggedIn: authController.isLoggedIn, message: 'Thread Posted' });
-          }
-      });
+        res.redirect('/forum?message=Thread%20Posted');
     });
 }
 
