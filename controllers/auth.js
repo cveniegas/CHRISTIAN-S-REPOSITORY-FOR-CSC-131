@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { promisify } = require('util');
 const express = require("express");
-const { Console } = require("console");
+const { Console, error } = require("console");
 
 const db = mysql.createConnection({
     host: process.env.DATABASE_HOST,
@@ -33,9 +33,15 @@ exports.postComment = (req,res) => {
       return res.status(500).send('Error posting comment'); // Send error response to the client
     }
   });
+  db.query('SELECT * FROM users WHERE name = ?', [name], (error,results)=>{
+    
+  })
 
 }
-
+exports.loadComments = (req,res) =>{
+  console.log(req.body);
+  db.query("SELECT users.*, forum.title, forum.content, forum.date FROM users JOIN forum ON users.id = forum.user_id;SELECT user_posts.*, users.name FROM user_posts INNER JOIN users ON user_posts.user_id = users.user_id")
+}
 exports.login = async (req, res) => {
     try {
       const { email, password } = req.body;
@@ -81,8 +87,6 @@ exports.login = async (req, res) => {
 
 exports.register = (req,res) =>{
     console.log(req.body);
-    // const name = request.body.name;
-    // const email = request.body.email;
 
     const { name, email, password, passwordConfirm} = req.body;
 
