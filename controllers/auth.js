@@ -17,6 +17,22 @@ const db = mysql.createConnection({
 const authController = require('../controllers/auth');
 // Define a Handlebars helper function to capitalize the first letter of a string
 
+exports.getProfile = (req, res) => {
+  if (!req.user) {
+      return res.redirect('/login');
+  }
+
+  // Query the forum table to retrieve the post history of the current user
+  db.query('SELECT * FROM forum WHERE user_id = ?', [req.user.id], (error, forumPosts) => {
+    if (error) {
+        console.error("Error retrieving forum post history:", error);
+        return res.status(500).send("Error retrieving forum post history");
+    }
+    // Render the profile page template
+    res.render('profile',{ user: req.user, forumData:forumPosts});
+  });
+};
+
 exports.postComment = (req,res) => {
   console.log(req.body);
   

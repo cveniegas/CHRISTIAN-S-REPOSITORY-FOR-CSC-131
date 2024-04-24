@@ -37,9 +37,9 @@
             <img src="/avatar.png" class="avatar" alt="user profile picture"/>
           </div>
           <div class="card-body">
-            <h5 class="card-title">{{user.name}}</h5>
+            <h5 class="card-title"><span>Name: {{user.name}}</span></h5>
             <p class="card-text">Here are some quick info about yourself.</p>
-            <a href="#" class="btn btn-primary">{{user.email}}</a>
+            <a href="#" class="btn btn-primary"><span>Email: {{user.email}}</span></a>
           </div>
         </div>
       </div>
@@ -49,17 +49,38 @@
           <div class="card-header">
             Profile Page
           </div>
-          <div class="card-body">
-            <h5 class="card-title">Hey {{user.name}} welcome back !</h5>
-            <p class="card-text"></p>
-            <p class="card-text">This is your profile page history.</p>
-          </div>
-          <div class="card-footer text-muted">
-            ISS HUB
-          </div>
-          <div id="google_translate_element"></div>
+              <div class="card-body">
+                  <h5 class="card-title"><span>Welcome, {{user.name}}!</span></h5>
+                  <p class="card-text">Here is some information about your profile:</p>
+                  <p class="card-text">This will get populated with your post history</p>
+                  <p class="card-text"></p>
+                </div>
+              <div class="card-footer text-muted">
+                  ISS HUB
+                </div>
+                <div id="google_translate_element"></div>
         </div>
       </div>
+      {{#each forumData}}
+      <div class="col-12 mt-3">
+        <div class="card text-left mb-3">
+          <div class="card-header">
+            {{title}}
+          </div>
+          <div class="card-body"><span>
+            <h5 class="card-title"></h5>
+            <p class="card-text">{{content}}</p>
+            <p class="card-text"></p>
+          </span>
+          </div>
+              
+          <div class="card-footer text-muted">
+            {{date}}
+          </div>
+        </div>
+      </div>
+      {{/each}}
+
     </div>
   
   </div>

@@ -11,6 +11,8 @@ router.post('/postComment', authController.postComment);
 
 router.post('/loadComments', authController.loadComments)
 
+router.post('getProfile', authController.getProfile)
+
 router.get('/logout', authController.logout );
 
 module.exports = router;
