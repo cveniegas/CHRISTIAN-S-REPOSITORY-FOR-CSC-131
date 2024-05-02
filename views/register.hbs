@@ -115,6 +115,11 @@
                     </form>
                 </section>
             </div>
+            <div class="card-footer text-muted">
+                  ISS HUB
+                </div>
+                <div id="google_translate_element"></div>
+            </div>
         </div>
         {{#if message}}
         <h4 class="alert alert-danger mt-4">{{message}}</h4>
@@ -136,6 +141,5 @@
       new google.translate.TranslateElement({pageLanguage: 'en'}, 'google_translate_element');
     }
     </script>
-    <div id="google_translate_element"></div>
 </body>
 </html>
