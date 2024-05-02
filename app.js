@@ -6,6 +6,9 @@ const dotenv = require('dotenv');
 const cookieParser = require('cookie-parser');
 const Handlebars = require('handlebars');
 dotenv.config({ path: './.env'})
+Handlebars.registerHelper('eq', function(arg1, arg2, options) {
+    return arg1 === arg2 ? options.fn(this) : options.inverse(this);
+});
 
 const db = mysql.createConnection({
     database: process.env.DATABASE,

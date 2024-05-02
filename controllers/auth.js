@@ -5,9 +5,11 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { promisify } = require('util');
 const express = require("express");
-
+const Handlebars = require('handlebars');
 const router = express.Router();
-
+Handlebars.registerHelper('eq', function(arg1, arg2, options) {
+  return arg1 === arg2 ? options.fn(this) : options.inverse(this);
+});
 const db = mysql.createConnection({
     host: process.env.DATABASE_HOST,
     user: process.env.DATABASE_USER,
@@ -15,13 +17,79 @@ const db = mysql.createConnection({
     database: process.env.DATABASE
 });
 const authController = require('../controllers/auth');
-// Define a Handlebars helper function to capitalize the first letter of a string
+
+exports.getAdminPortal = (req, res) => {
+  if (!req.user || req.user.user_type !== 'admin') {
+      return res.redirect('/login');
+  }
+  const isAdmin = req.user && req.user.user_type === 'admin';
+
+  // Query the database to fetch user data
+  db.query('SELECT * FROM users', (error, users) => {
+      if (error) {
+          console.error("Error fetching user data:", error);
+          return res.status(500).send("Error fetching user data");
+      }
+
+      // Render the admin portal template with user data
+      res.render('adminPortal', { user: req.user, users: users, isAdmin: isAdmin });
+  });
+};
+
+exports.loadUsers = (req, res, next) => {
+  db.query("SELECT * FROM users", (error, userResults) => {
+      if (error) {
+          console.error("Error executing user query:", error);
+          return res.status(500).send("Error fetching user data");
+      }
+
+      req.users = userResults;
+      next();
+  });
+}
+exports.admindeleteAccount = async (req, res) => {
+  try {
+      const { user_id } = req.body; // Get the user_id from the request body
+
+      // Delete forum posts associated with the user
+      await db.query('DELETE FROM forum WHERE user_id = ?', user_id);
+
+      // Delete the user's account
+      await db.query('DELETE FROM users WHERE id = ?', user_id);
+
+      res.redirect('/adminPortal');
+  } catch (error) {
+      console.error("Error deleting account:", error);
+      res.status(500).send("Error deleting account");
+  }
+};
+
+exports.deleteAccount = async (req, res) => {
+  try {
+      // Get the user ID from the decoded JWT token
+      const decoded = jwt.decode(req.cookies.jwt);
+      const userId = decoded.id;
+
+      // Delete forum posts associated with the user
+      await db.query('DELETE FROM forum WHERE user_id = ?', userId);
+
+      // Delete the user's account
+      await db.query('DELETE FROM users WHERE id = ?', userId);
+
+      // Clear the JWT cookie and redirect to login page
+      res.clearCookie('jwt');
+      res.redirect('/login');
+  } catch (error) {
+      console.error("Error deleting account:", error);
+      res.status(500).send("Error deleting account");
+  }
+};
 
 exports.getProfile = (req, res) => {
   if (!req.user) {
       return res.redirect('/login');
   }
-
+  const isAdmin = req.user && req.user.user_type === 'admin';
   // Query the forum table to retrieve the post history of the current user
   db.query('SELECT * FROM forum WHERE user_id = ?', [req.user.id], (error, forumPosts) => {
     if (error) {
@@ -29,7 +97,7 @@ exports.getProfile = (req, res) => {
         return res.status(500).send("Error retrieving forum post history");
     }
     // Render the profile page template
-    res.render('profile',{ user: req.user, forumData:forumPosts});
+    res.render('profile',{ user: req.user, forumData:forumPosts,isAdmin: isAdmin});
   });
 };
 
@@ -129,7 +197,7 @@ exports.login = async (req, res) => {
 exports.register = (req,res) =>{
     console.log(req.body);
 
-    const { name, email, password, passwordConfirm} = req.body;
+    const { name, email, password, passwordConfirm, user_type} = req.body;
 
     db.query('SELECT email FROM users Where email = ?', [email],async(error, results) =>{
         if (error){
@@ -150,7 +218,7 @@ exports.register = (req,res) =>{
         
         // save to the database
 
-        db.query('INSERT INTO users SET ?',{name: name, email: email, password: hashedPassword}, (error,results)=>{
+        db.query('INSERT INTO users SET ?',{name: name, email: email, password: hashedPassword, user_type: user_type}, (error,results)=>{
             if(error){
                 console.log(error);
             } else{
@@ -164,7 +232,7 @@ exports.register = (req,res) =>{
 }
 
 exports.isLoggedIn = async (req, res, next) => {
-    // console.log(req.cookies);
+     console.log(req.cookies);
     if( req.cookies.jwt) {
       try {
         //1) verify the token
@@ -198,7 +266,7 @@ exports.isLoggedIn = async (req, res, next) => {
   }
   
 exports.logout = async (req, res) => {
-  res.cookie('jwt', 'logout', {
+  res.cookie('jwt', '', {
     expires: new Date(Date.now() + 2*1000),
     httpOnly: true
   });
