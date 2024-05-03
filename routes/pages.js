@@ -15,6 +15,21 @@ router.get('/', authController.isLoggedIn, (req, res) => {
   });
 });
 
+router.get ('/culturalEvent',authController.isLoggedIn, (req,res) => {
+  const isAdmin = req.user && req.user.user_type === 'admin'
+  res.render('culturalEvent', {user: req.user, isAdmin: isAdmin})
+});
+
+router.get ('/localServices',authController.isLoggedIn, (req,res) => {
+  const isAdmin = req.user && req.user.user_type === 'admin'
+  res.render('localServices', {user: req.user, isAdmin: isAdmin})
+});
+
+router.get ('/academicSupport',authController.isLoggedIn, (req,res) => {
+  const isAdmin = req.user && req.user.user_type === 'admin'
+  res.render('academicSupport', {user: req.user, isAdmin: isAdmin})
+});
+
 router.get('/adminPortal', authController.isLoggedIn, authController.loadUsers, (req, res) => {
   const isAdmin = req.user && req.user.user_type === 'admin';
   res.render('adminPortal', { user: req.user, users: req.users, isAdmin: isAdmin });
